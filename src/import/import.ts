@@ -47,7 +47,7 @@ export async function processFile({
 
     // Count total lines for progress bar
     const totalLines = (await countLines(filePath)) - 1; // Subtract 1 for header
-    logger.info(`Found ${totalLines} records to process`);
+    logger.info(`Found ${totalLines} records to process \n`);
 
     const startTime = performance.now();
     progressBar.start(totalLines, 0);
