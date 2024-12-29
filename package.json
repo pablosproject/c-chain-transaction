@@ -6,10 +6,14 @@
     "migrate": "ts-node src/common/db/migrate.ts",
     "import": "ts-node src/import/import.ts",
     "monitor-chain": "ts-node src/c-chain-client/index.ts",
-    "pg-typed": "pgtyped --watch --config pgtyped.config.json"
+    "server": "ts-node src/server/index.ts",
+    "pg-typed": "pgtyped --watch --config pgtyped.config.json",
+    "benchmark": "ts-node benchmark/benchmark.ts"
   },
-  "author": "Paolo Tgaliani",
+  "author": "Paolo Tagliani",
   "dependencies": {
+    "@hono/node-server": "^1.13.7",
+    "@hono/zod-validator": "^0.4.2",
     "@pgtyped/runtime": "^2.3.0",
     "@types/dotenv": "^6.1.1",
     "cli-progress": "^3.12.0",
@@ -17,20 +21,22 @@
     "csv-parse": "^5.6.0",
     "dotenv": "^16.4.7",
     "env-schema": "^6.0.0",
+    "hono": "^4.6.15",
     "pg": "^8.13.1",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
     "postgres-migrations": "^5.3.0",
-    "slonik": "^46.2.0",
-    "slonik-interceptor-preset": "^1.2.10",
     "ts-node": "^10.9.2",
     "viem": "^2.21.57",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@pgtyped/cli": "^2.3.0",
+    "@types/autocannon": "^7.12.5",
     "@types/cli-progress": "^3.11.6",
+    "@types/node": "^20.11.17",
     "@types/pg": "^8.11.10",
+    "autocannon": "^8.0.0",
     "typescript": "^5.7.2"
   }
 }
