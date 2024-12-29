@@ -1,11 +1,11 @@
-import { Command } from "commander";
+import cliProgress from "cli-progress";
 import { parse as csvParse } from "csv-parse";
 import * as fs from "fs";
+import { Logger } from "pino";
 import { z } from "zod";
-import { Transaction } from "../common/types/transaction";
 import { createPool } from "../common/db/connection";
 import { TransactionRepository } from "../common/service/transaction.repository";
-import cliProgress from "cli-progress";
+import { Transaction } from "../common/types/transaction";
 import { countLines } from "./util";
 
 const csvTransaction = z.object({
@@ -21,15 +21,6 @@ const csvTransaction = z.object({
   gas_price: z.string().transform((price) => BigInt(price)),
 });
 
-const program = new Command();
-
-program
-  .name("transaction importer")
-  .requiredOption("-f, --file <path>", "Path to the input file")
-  .option("-b, --batch <size>", "Batch size for processing", "100")
-  .parse(process.argv);
-
-const options = program.opts();
 const pool = createPool();
 const transactionRepository = new TransactionRepository(pool);
 const progressBar = new cliProgress.SingleBar({
@@ -37,9 +28,18 @@ const progressBar = new cliProgress.SingleBar({
   barCompleteChar: "\u2588",
   barIncompleteChar: "\u2591",
 });
-const BATCH_SIZE = parseInt(options.batch);
+let logger: Logger;
 
-async function processFile(filePath: string) {
+export async function processFile({
+  filePath,
+  batchSize,
+  logger,
+}: {
+  filePath: string;
+  batchSize: number;
+  logger: Logger;
+}) {
+  logger = logger;
   try {
     if (!fs.existsSync(filePath)) {
       throw new Error("File not found");
@@ -47,7 +47,7 @@ async function processFile(filePath: string) {
 
     // Count total lines for progress bar
     const totalLines = (await countLines(filePath)) - 1; // Subtract 1 for header
-    console.log(`Found ${totalLines} records to process`);
+    logger.info(`Found ${totalLines} records to process`);
 
     const startTime = performance.now();
     progressBar.start(totalLines, 0);
@@ -61,17 +61,22 @@ async function processFile(filePath: string) {
     let processedCount = 0;
 
     for await (const record of parser) {
-      const transaction = validateAndTransform(record);
-      if (transaction) {
-        currentBatch.push(transaction);
+      try {
+        const transaction = validateAndTransform(record);
+        if (transaction) {
+          currentBatch.push(transaction);
+        }
+      } catch (error) {
+        logger.error(`Error processing record: ${error}`);
+        errorCount++;
       }
 
-      if (currentBatch.length >= BATCH_SIZE) {
+      if (currentBatch.length >= batchSize) {
         try {
           await transactionRepository.bulkInsertTransaction(currentBatch);
           currentBatch = [];
         } catch (error) {
-          console.error(`Error inserting transaction: ${error}`);
+          logger.error(`Error inserting transaction: ${error}`);
           errorCount++;
           currentBatch = [];
         }
@@ -86,7 +91,7 @@ async function processFile(filePath: string) {
       try {
         await transactionRepository.bulkInsertTransaction(currentBatch);
       } catch (error) {
-        console.error(`Error inserting transaction: ${error}`);
+        logger.error(`Error inserting transaction: ${error}`);
         errorCount++;
       }
     }
@@ -94,33 +99,25 @@ async function processFile(filePath: string) {
     progressBar.stop();
     const totalTimeSeconds = (performance.now() - startTime) / 1000;
 
-    console.log("\nImport Summary:");
-    console.log("----------------");
-    console.log(`Total records processed: ${processedCount}`);
-    console.log(`Time taken: ${totalTimeSeconds.toFixed(2)} seconds`);
-    console.log(`Failed imports: ${errorCount}`);
+    logger.info("\nImport Summary:");
+    logger.info("----------------");
+    logger.info(`Total records processed: ${processedCount}`);
+    logger.info(`Time taken: ${totalTimeSeconds.toFixed(2)} seconds`);
+    logger.info(`Failed imports: ${errorCount}`);
 
     process.exit(0);
   } catch (error) {
-    console.error(`Error: ${error}`);
+    logger.error(`Error: ${error}`);
     process.exit(1);
   }
 }
 
 const validateAndTransform = (record: any): Transaction | null => {
-  try {
-    return csvTransaction
-      .transform((csvTransaction) => ({
-        ...csvTransaction,
-        from_address: csvTransaction.from,
-        to_address: csvTransaction.to,
-      }))
-      .parse(record);
-  } catch (error) {
-    console.error(`Error validating record: ${error}`);
-    return null;
-  }
+  return csvTransaction
+    .transform((csvTransaction) => ({
+      ...csvTransaction,
+      from_address: csvTransaction.from,
+      to_address: csvTransaction.to,
+    }))
+    .parse(record);
 };
-
-console.log("Transaction import starting...");
-processFile(options.file);
