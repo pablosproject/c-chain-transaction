@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 export const Transaction = z.object({
-  id: z.number().optional(),
   timestamp: z.bigint(),
   status: z.boolean(),
   block_number: z.bigint(),

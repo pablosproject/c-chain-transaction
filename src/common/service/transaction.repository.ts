@@ -1,6 +1,10 @@
 import { Pool } from "pg";
 import {
   bulkInsertTransaction,
+  countTransactionByAddress,
+  countTransactions,
+  getTransactionByAddress,
+  getTransactionOrderByValue,
   insertTransaction,
 } from "../db/queries/transaction.queries";
 import { Transaction } from "../types/transaction";
@@ -12,10 +16,9 @@ import { z } from "zod";
  * database using strings
  */
 const DBTransaction = z.object({
-  id: z.number().optional(),
-  timestamp: z.bigint(),
+  timestamp: z.date().transform((value) => BigInt(value.getTime())),
   status: z.boolean(),
-  block_number: z.bigint(),
+  block_number: z.string().transform((value) => BigInt(value)),
   tx_index: z.number(),
   from_address: z.string(),
   to_address: z.string(),
@@ -69,5 +72,46 @@ export class TransactionRepository {
       },
       this.pool,
     );
+  }
+
+  async getTransactionsForAddress(
+    address: string,
+    pagination: { page: number; limit: number },
+  ): Promise<{ transactions: Transaction[]; totalCount: number }> {
+    const { page, limit } = pagination;
+    const offset = (page - 1) * limit;
+
+    const [transactions, totalCount] = await Promise.all([
+      getTransactionByAddress.run({ address, limit, offset }, this.pool),
+      countTransactionByAddress.run({ address }, this.pool),
+    ]);
+
+    return {
+      transactions: transactions.map((t) => DBTransaction.parse(t)),
+      totalCount: parseInt(totalCount[0].count || ""),
+    };
+  }
+
+  async getTransactionCountForAddress(address: string): Promise<number> {
+    const result = await countTransactionByAddress.run({ address }, this.pool);
+    return parseInt(result[0].count || "");
+  }
+
+  async getTransactionsOrderedByValue(pagination: {
+    page: number;
+    limit: number;
+  }): Promise<{ transactions: Transaction[]; totalCount: number }> {
+    const { page, limit } = pagination;
+    const offset = (page - 1) * limit;
+
+    const [transactions, totalCount] = await Promise.all([
+      getTransactionOrderByValue.run({ limit, offset }, this.pool),
+      countTransactions.run(undefined, this.pool),
+    ]);
+
+    return {
+      transactions: transactions.map((t) => DBTransaction.parse(t)),
+      totalCount: parseInt(totalCount[0].count || ""),
+    };
   }
 }

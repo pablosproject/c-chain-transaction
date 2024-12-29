@@ -131,3 +131,144 @@ const bulkInsertTransactionIR: any = {"usedParamSet":{"timestamp":true,"status":
 export const bulkInsertTransaction = new PreparedQuery<IBulkInsertTransactionParams,IBulkInsertTransactionResult>(bulkInsertTransactionIR);
 
 
+/** 'GetTransactionByAddress' parameters type */
+export interface IGetTransactionByAddressParams {
+  address: string;
+  limit: number;
+  offset: number;
+}
+
+/** 'GetTransactionByAddress' return type */
+export interface IGetTransactionByAddressResult {
+  block_number: string;
+  from_address: string;
+  gas_limit: string;
+  gas_price: string;
+  gas_used: string;
+  status: boolean;
+  timestamp: Date;
+  to_address: string;
+  tx_index: number;
+  value: string;
+}
+
+/** 'GetTransactionByAddress' query type */
+export interface IGetTransactionByAddressQuery {
+  params: IGetTransactionByAddressParams;
+  result: IGetTransactionByAddressResult;
+}
+
+const getTransactionByAddressIR: any = {"usedParamSet":{"address":true,"limit":true,"offset":true},"params":[{"name":"address","required":true,"transform":{"type":"scalar"},"locs":[{"a":48,"b":56},{"a":87,"b":95}]},{"name":"limit","required":true,"transform":{"type":"scalar"},"locs":[{"a":154,"b":160}]},{"name":"offset","required":true,"transform":{"type":"scalar"},"locs":[{"a":178,"b":185}]}],"statement":"SELECT *\nFROM transactions\nWHERE from_address = :address!::varchar\n    OR to_address = :address!::varchar\nORDER BY block_number DESC, tx_index DESC\nLIMIT :limit!::integer\nOFFSET :offset!::integer"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT *
+ * FROM transactions
+ * WHERE from_address = :address!::varchar
+ *     OR to_address = :address!::varchar
+ * ORDER BY block_number DESC, tx_index DESC
+ * LIMIT :limit!::integer
+ * OFFSET :offset!::integer
+ * ```
+ */
+export const getTransactionByAddress = new PreparedQuery<IGetTransactionByAddressParams,IGetTransactionByAddressResult>(getTransactionByAddressIR);
+
+
+/** 'CountTransactionByAddress' parameters type */
+export interface ICountTransactionByAddressParams {
+  address: string;
+}
+
+/** 'CountTransactionByAddress' return type */
+export interface ICountTransactionByAddressResult {
+  count: string | null;
+}
+
+/** 'CountTransactionByAddress' query type */
+export interface ICountTransactionByAddressQuery {
+  params: ICountTransactionByAddressParams;
+  result: ICountTransactionByAddressResult;
+}
+
+const countTransactionByAddressIR: any = {"usedParamSet":{"address":true},"params":[{"name":"address","required":true,"transform":{"type":"scalar"},"locs":[{"a":55,"b":63},{"a":94,"b":102}]}],"statement":"SELECT COUNT(*)\nFROM transactions\nWHERE from_address = :address!::varchar\n    OR to_address = :address!::varchar"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT COUNT(*)
+ * FROM transactions
+ * WHERE from_address = :address!::varchar
+ *     OR to_address = :address!::varchar
+ * ```
+ */
+export const countTransactionByAddress = new PreparedQuery<ICountTransactionByAddressParams,ICountTransactionByAddressResult>(countTransactionByAddressIR);
+
+
+/** 'GetTransactionOrderByValue' parameters type */
+export interface IGetTransactionOrderByValueParams {
+  limit: number;
+  offset: number;
+}
+
+/** 'GetTransactionOrderByValue' return type */
+export interface IGetTransactionOrderByValueResult {
+  block_number: string;
+  from_address: string;
+  gas_limit: string;
+  gas_price: string;
+  gas_used: string;
+  status: boolean;
+  timestamp: Date;
+  to_address: string;
+  tx_index: number;
+  value: string;
+}
+
+/** 'GetTransactionOrderByValue' query type */
+export interface IGetTransactionOrderByValueQuery {
+  params: IGetTransactionOrderByValueParams;
+  result: IGetTransactionOrderByValueResult;
+}
+
+const getTransactionOrderByValueIR: any = {"usedParamSet":{"limit":true,"offset":true},"params":[{"name":"limit","required":true,"transform":{"type":"scalar"},"locs":[{"a":53,"b":59}]},{"name":"offset","required":true,"transform":{"type":"scalar"},"locs":[{"a":77,"b":84}]}],"statement":"SELECT *\nFROM transactions\nORDER BY value DESC\nLIMIT :limit!::integer\nOFFSET :offset!::integer"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT *
+ * FROM transactions
+ * ORDER BY value DESC
+ * LIMIT :limit!::integer
+ * OFFSET :offset!::integer
+ * ```
+ */
+export const getTransactionOrderByValue = new PreparedQuery<IGetTransactionOrderByValueParams,IGetTransactionOrderByValueResult>(getTransactionOrderByValueIR);
+
+
+/** 'CountTransactions' parameters type */
+export type ICountTransactionsParams = void;
+
+/** 'CountTransactions' return type */
+export interface ICountTransactionsResult {
+  count: string | null;
+}
+
+/** 'CountTransactions' query type */
+export interface ICountTransactionsQuery {
+  params: ICountTransactionsParams;
+  result: ICountTransactionsResult;
+}
+
+const countTransactionsIR: any = {"usedParamSet":{},"params":[],"statement":"SELECT COUNT(*)\nFROM transactions"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT COUNT(*)
+ * FROM transactions
+ * ```
+ */
+export const countTransactions = new PreparedQuery<ICountTransactionsParams,ICountTransactionsResult>(countTransactionsIR);
+
+

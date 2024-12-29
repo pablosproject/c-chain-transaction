@@ -59,3 +59,37 @@ SELECT * FROM UNNEST(
     :gas_used::numeric[],
     :gas_price::numeric[]
 );
+
+/*
+@name GetTransactionByAddress
+*/
+SELECT *
+FROM transactions
+WHERE from_address = :address!::varchar
+    OR to_address = :address!::varchar
+ORDER BY block_number DESC, tx_index DESC
+LIMIT :limit!::integer
+OFFSET :offset!::integer;
+
+/*
+@name CountTransactionByAddress
+*/
+SELECT COUNT(*)
+FROM transactions
+WHERE from_address = :address!::varchar
+    OR to_address = :address!::varchar;
+
+/*
+@name GetTransactionOrderByValue
+*/
+SELECT *
+FROM transactions
+ORDER BY value DESC
+LIMIT :limit!::integer
+OFFSET :offset!::integer;
+
+/*
+@name CountTransactions
+*/
+SELECT COUNT(*)
+FROM transactions;
