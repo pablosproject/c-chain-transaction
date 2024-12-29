@@ -12,6 +12,7 @@ const zodSchema = z.object({
   DB_PASSWORD: z.string().default("dev_password"),
   DB_NAME: z.string().default("dev_database"),
   DB_CONNECTION_STRING: z.string(),
+  AVALANCE_NODE: z.string(),
 });
 
 type Schema = z.infer<typeof zodSchema>;
@@ -27,6 +28,7 @@ const schema = {
     DB_PASSWORD: { type: "string", default: "dev_password" },
     DB_NAME: { type: "string", default: "dev_database" },
     DB_CONNECTION_STRING: { type: "string" },
+    AVALANCE_NODE: { type: "string" },
     NODE_ENV: {
       type: "string",
       enum: ["development", "production", "test"],

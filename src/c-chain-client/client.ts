@@ -1,30 +1,22 @@
 import { Pool } from "pg";
-import pino from "pino";
+import { Logger } from "pino";
 import { Block, createPublicClient, http, type PublicClient } from "viem";
 import { avalanche } from "viem/chains";
-import { Transaction } from "../common/types/transaction";
 import { createPool } from "../common/db/connection";
+import { env } from "../common/lib/env";
 import { TransactionRepository } from "../common/service/transaction.repository";
-
-export const logger = pino({
-  transport: {
-    target: "pino-pretty",
-    options: {
-      colorize: true,
-    },
-  },
-});
+import { Transaction } from "../common/types/transaction";
 
 export class TransactionMonitorService {
   private client: PublicClient;
   private pool: Pool;
   private transactionRepository: TransactionRepository;
 
-  constructor() {
-    // Initialize C-Chain client
+  constructor(private readonly logger: Logger) {
+    console.log(env.AVALANCE_NODE);
     this.client = createPublicClient({
       chain: avalanche,
-      transport: http("https://api.avax.network/ext/bc/C/rpc"),
+      transport: http(env.AVALANCE_NODE),
     });
 
     // Initialize PostgreSQL connection pool
@@ -44,7 +36,7 @@ export class TransactionMonitorService {
 
   async startMonitoring() {
     try {
-      logger.info("Starting transaction monitoring");
+      this.logger.info("Starting transaction monitoring");
 
       const unwatch = this.client.watchBlocks({
         blockTag: "safe",
@@ -53,19 +45,19 @@ export class TransactionMonitorService {
           await this.processBlock(block);
         },
         onError: (error) => {
-          logger.error({ error }, "Error in block watching");
+          this.logger.error({ error }, "Error in block watching");
         },
       });
 
       return unwatch;
     } catch (error) {
-      logger.error({ error }, "Failed to start monitoring");
+      this.logger.error({ error }, "Failed to start monitoring");
       throw error;
     }
   }
 
   async cleanup() {
-    logger.info("Cleaning up resources");
+    this.logger.info("Cleaning up resources");
     await this.pool.end();
   }
 
@@ -90,19 +82,19 @@ export class TransactionMonitorService {
       this.transactionRepository.bulkInsertTransaction(transactions);
 
       const endTime = performance.now();
-      logger.info(
+      this.logger.info(
         {
           blockNumber: block.number.toString(),
           transactionCount: transactions.length,
           processingTimeMs: Math.round(endTime - startTime),
         },
-        "Block processed successfully",
+        "Block processed successfully"
       );
     } catch (error) {
       console.error(error);
-      logger.error(
+      this.logger.error(
         { error, blockNumber: block.number.toString() },
-        "Failed to process block",
+        "Failed to process block"
       );
     }
   }
