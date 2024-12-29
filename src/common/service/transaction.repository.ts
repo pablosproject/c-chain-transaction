@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { z } from "zod";
 import {
   bulkInsertTransaction,
   countTransactionByAddress,
@@ -8,7 +9,6 @@ import {
   insertTransaction,
 } from "../db/queries/transaction.queries";
 import { Transaction } from "../types/transaction";
-import { z } from "zod";
 
 /**
  * To maintain bigint precision, we use numeric
@@ -42,7 +42,7 @@ export class TransactionRepository {
         value: transaction.value.toString(),
         gas_price: transaction.gas_price.toString(),
       },
-      this.pool,
+      this.pool
     );
   }
 
@@ -70,13 +70,13 @@ export class TransactionRepository {
         gas_used: values.map((t) => t.gas_used),
         gas_price: values.map((t) => t.gas_price),
       },
-      this.pool,
+      this.pool
     );
   }
 
   async getTransactionsForAddress(
     address: string,
-    pagination: { page: number; limit: number },
+    pagination: { page: number; limit: number }
   ): Promise<{ transactions: Transaction[]; totalCount: number }> {
     const { page, limit } = pagination;
     const offset = (page - 1) * limit;

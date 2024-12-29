@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "migrate": "ts-node src/common/db/migrate.ts",
-    "import": "ts-node src/import/import.ts",
+    "import": "ts-node src/import/index.ts",
     "monitor-chain": "ts-node src/c-chain-client/index.ts",
     "server": "ts-node src/server/index.ts",
     "pg-typed": "pgtyped --watch --config pgtyped.config.json",
